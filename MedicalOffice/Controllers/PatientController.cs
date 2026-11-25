@@ -246,7 +246,8 @@ public class PatientController : ElephantController
                 if (thePicture != null) await AddPicture(patient, thePicture);
                 _context.Add(patient);
                 await _context.SaveChangesAsync();
-                return RedirectToAction("Details", new { patient.ID });
+                //return RedirectToAction("Details", new { patient.ID });
+                return RedirectToAction("Index", "PatientAppointment", new { PatientID = patient.ID });
             }
         }
         catch (RetryLimitExceededException /* dex */)//This is a Transaction in the Database!
@@ -351,7 +352,8 @@ public class PatientController : ElephantController
                     if (thePicture != null) await AddPicture(patientToUpdate, thePicture);
                 }
                 await _context.SaveChangesAsync();
-                return RedirectToAction("Details", new { patientToUpdate.ID });
+                //return RedirectToAction("Details", new { patientToUpdate.ID });
+                return RedirectToAction("Index", "PatientAppointment", new { PatientID = patientToUpdate.ID });
             }
             catch (DbUpdateConcurrencyException ex)// Added for concurrency
             {

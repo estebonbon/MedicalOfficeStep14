@@ -44,11 +44,15 @@ public class DoctorController : ElephantController
             return NotFound();
         }
 
+        //var doctor = await _context.Doctors
+        //    .Include(d => d.Patients)
+        //    .Include(d => d.DoctorSpecialties)
+        //        .ThenInclude(d => d.Specialty)
+        //    .Include(d => d.DoctorDocuments)
+        //    .AsNoTracking()
+        //    .FirstOrDefaultAsync(m => m.ID == id);
+
         var doctor = await _context.Doctors
-            .Include(d => d.Patients)
-            .Include(d => d.DoctorSpecialties)
-                .ThenInclude(d => d.Specialty)
-            .Include(d => d.DoctorDocuments)
             .AsNoTracking()
             .FirstOrDefaultAsync(m => m.ID == id);
 
@@ -246,6 +250,33 @@ public class DoctorController : ElephantController
         }
         return View(doctor);
 
+    }
+
+    public PartialViewResult ListOfSpecialtiesDetails(int id) //Think of components, a section of html
+    {
+        var query = from s in _context.DoctorSpecialties.Include(p => p.Specialty)
+                    where s.DoctorID == id
+                    orderby s.Specialty.SpecialtyName
+                    select s;
+        return PartialView("_ListOfSpecialties", query.ToList());
+    }
+
+    public PartialViewResult ListOfPatientsDetails(int id)
+    {
+        var query = from p in _context.Patients
+                    where p.DoctorID == id
+                    orderby p.LastName, p.FirstName
+                    select p;
+        return PartialView("_ListOfPatients", query.ToList());
+    }
+
+    public PartialViewResult ListOfDocumentsDetails(int id)
+    {
+        var query = from p in _context.DoctorDocuments
+                    where p.DoctorID == id
+                    orderby p.FileName
+                    select p;
+        return PartialView("_ListOfDocuments", query.ToList());
     }
 
     public async Task<FileContentResult> Download(int id)

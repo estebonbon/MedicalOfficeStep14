@@ -16,6 +16,7 @@ public class PatientAppointmentController : ElephantController
         _context = context;
     }
 
+    private static readonly string[] DurationItems = ["10", "20", "30", "40", "50", "60", "90", "120"];
     // GET: PatientAppointment
     public async Task<IActionResult> Index(int? PatientID, int? page, int? pageSizeID, int? AppointmentReasonID, string actionButton,
         string SearchString, string sortDirection = "desc", string sortField = "Appointment")
@@ -157,10 +158,13 @@ public class PatientAppointmentController : ElephantController
         }
 
         ViewData["PatientName"] = PatientName; //Display in heading of add view
+        ViewData["Duration"] = new SelectList(DurationItems, "20");
+
         Appointment a = new Appointment() //new appointment object
         {
             PatientID = PatientID.GetValueOrDefault(),
-            StartTime = DateTime.Today.AddDays(1).AddHours(9) //Start time of tmr, the can adjust
+            //StartTime = DateTime.Today.AddDays(1).AddHours(9) //Start time of tmr, the can adjust
+            StartTime = DateUtilities.GetNextWeekday(DateTime.Today, 7)//At least 7 days from today at 9:00 am
         };
         PopulateDropDownLists(); //Retireve avialble doctrs and appointment reasons
         return View(a); //Return the appoinment
@@ -173,10 +177,18 @@ public class PatientAppointmentController : ElephantController
     [ValidateAntiForgeryToken]
     //Binding affects which properties can be submitted
     public async Task<IActionResult> Add([Bind("StartTime,EndTime,Notes,ExtraFee,DoctorID," +
-            "PatientID,AppointmentReasonID")] Appointment appointment, string PatientName)
+            "PatientID,AppointmentReasonID")] Appointment appointment, string PatientName, int Duration)
     {
         try
         {
+            if (!DurationItems.Contains(Duration.ToString()))
+            {
+                ModelState.AddModelError("", "You must select a valid duration.");
+            }
+            else
+            {
+                appointment.EndTime = appointment.StartTime.AddMinutes(Duration);
+            }
             if (ModelState.IsValid) //if model is valid
             {
                 _context.Add(appointment);
@@ -192,6 +204,7 @@ public class PatientAppointmentController : ElephantController
 
         PopulateDropDownLists(appointment); //preserve anything selected
         ViewData["PatientName"] = PatientName; //remains available in the view
+        ViewData["Duration"] = new SelectList(DurationItems, Duration);
         return View(appointment);
     }
 

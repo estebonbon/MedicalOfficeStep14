@@ -3,6 +3,7 @@ using MedicalOffice.CustomControllers;
 using MedicalOffice.Data;
 using MedicalOffice.Models;
 using MedicalOffice.Utilities;
+using MedicalOffice.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -375,6 +376,72 @@ public class AppointmentsController : ElephantController
             }
         }
         return NotFound("No data.");
+    }
+    public IActionResult AappointmentSummaryExport()
+    {
+        //Get the Data
+        var sumQ = GetAppointmentSummaries();
+
+        //How many rows?
+        int numRows = sumQ.Count();
+
+        if (numRows > 0) //We have data
+        {
+            //Create a new spreadsheet from scratch.
+            using (ExcelPackage excel = new ExcelPackage())
+            {
+                var workSheet = excel.Workbook.Worksheets.Add("Appointment Summary");
+
+                //Note: Cells[row, column]
+                workSheet.Cells[1, 1].LoadFromCollection(sumQ, true);
+
+                //Autofit columns
+                workSheet.Cells.AutoFitColumns();
+
+                //Ok, time to download the Excel
+
+                try
+                {
+                    Byte[] theData = excel.GetAsByteArray();
+                    string filename = "AppointmentSummary.xlsx";
+                    string mimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                    return File(theData, mimeType, filename);
+                }
+                catch (Exception)
+                {
+                    return BadRequest("Could not build and download the file.");
+                }
+            }
+        }
+        return NotFound("No data.");
+    }
+
+    public async Task<IActionResult> AppointmentSummary(int? page, int? pageSizeID)
+    {
+        var sumQ = GetAppointmentSummaries();
+
+        int pageSize = PageSizeHelper.SetPageSize(HttpContext, pageSizeID, "AppointmentSummary");//Remember for this View
+        ViewData["pageSizeID"] = PageSizeHelper.PageSizeList(pageSize);
+        var pagedData = await PaginatedList<AppointmentSummaryVM>.CreateAsync(sumQ.AsNoTracking(), page ?? 1, pageSize);
+
+        return View(pagedData);
+    }
+
+    private IQueryable<AppointmentSummaryVM> GetAppointmentSummaries()
+    {
+        return _context.Appointments.Include(a => a.Patient)
+            .GroupBy(a => new { a.PatientID, a.Patient!.LastName, a.Patient!.FirstName, a.Patient!.MiddleName })
+            .Select(grp => new AppointmentSummaryVM
+            {
+                ID = grp.Key.PatientID,
+                First_Name = grp.Key.FirstName,
+                Middle_Name = grp.Key.MiddleName,
+                Last_Name = grp.Key.LastName,
+                Number_Of_Appointments = grp.Count(),
+                Total_Extra_Fees = grp.Sum(a => a.ExtraFee),
+                Maximum_Fee_Charged = grp.Max(a => a.ExtraFee)
+            })
+            .OrderBy(s => s.Last_Name).ThenBy(s => s.First_Name);
     }
 
 

@@ -416,6 +416,30 @@ public class AppointmentsController : ElephantController
         return NotFound("No data.");
     }
 
+    public async Task<IActionResult> AppointmentReasonSummary()
+    {
+        var sumQ = await _context.Appointments.Include(a => a.AppointmentReason)
+            .GroupBy(a => new
+            {
+                a.AppointmentReasonID, //This doesnt mean appointmentIDS need to match, it means ReasonIDS should match, and there reason name, so there is no id for null this works around that
+                ReasonName = a.AppointmentReason == null
+                    ? "No Reason Given"
+                    : a.AppointmentReason.ReasonName
+            })
+            .Select(grp => new AppointmentReasonSummaryVM
+            {
+                ID = grp.Key.AppointmentReasonID,
+                Appointment_Reason = grp.Key.ReasonName,
+                Number_Of_Appointments = grp.Count(),
+                Total_Extra_Fees = grp.Sum(a => a.ExtraFee),
+                Maximum_Fee_Charged = grp.Max(a => a.ExtraFee)
+            })
+            .OrderBy(s => s.Appointment_Reason)
+            .AsNoTracking()
+            .ToListAsync();
+
+        return View(sumQ);
+    }
     public async Task<IActionResult> AppointmentSummary(int? page, int? pageSizeID)
     {
         var sumQ = GetAppointmentSummaries();

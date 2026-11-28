@@ -57,7 +57,7 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
 
-    MedicalOfficeInitializer.Initialize(serviceProvider: services, DeleteDatabase: false,
+    MedicalOfficeInitializer.Initialize(serviceProvider: services, DeleteDatabase: true,
     UseMigrations: true, SeedSampleData: true);
 
 }

@@ -453,19 +453,21 @@ public class AppointmentsController : ElephantController
 
     private IQueryable<AppointmentSummaryVM> GetAppointmentSummaries()
     {
-        return _context.Appointments.Include(a => a.Patient)
-            .GroupBy(a => new { a.PatientID, a.Patient!.LastName, a.Patient!.FirstName, a.Patient!.MiddleName })
-            .Select(grp => new AppointmentSummaryVM
-            {
-                ID = grp.Key.PatientID,
-                First_Name = grp.Key.FirstName,
-                Middle_Name = grp.Key.MiddleName,
-                Last_Name = grp.Key.LastName,
-                Number_Of_Appointments = grp.Count(),
-                Total_Extra_Fees = grp.Sum(a => a.ExtraFee),
-                Maximum_Fee_Charged = grp.Max(a => a.ExtraFee)
-            })
-            .OrderBy(s => s.Last_Name).ThenBy(s => s.First_Name);
+        //return _context.Appointments.Include(a => a.Patient)
+        //    .GroupBy(a => new { a.PatientID, a.Patient!.LastName, a.Patient!.FirstName, a.Patient!.MiddleName })
+        //    .Select(grp => new AppointmentSummaryVM
+        //    {
+        //        ID = grp.Key.PatientID,
+        //        First_Name = grp.Key.FirstName,
+        //        Middle_Name = grp.Key.MiddleName,
+        //        Last_Name = grp.Key.LastName,
+        //        Number_Of_Appointments = grp.Count(),
+        //        Total_Extra_Fees = grp.Sum(a => a.ExtraFee),
+        //        Maximum_Fee_Charged = grp.Max(a => a.ExtraFee)
+        //    })
+        //    .OrderBy(s => s.Last_Name).ThenBy(s => s.First_Name);
+
+        return _context.AppointmentSummaries.AsNoTracking();
     }
 
 

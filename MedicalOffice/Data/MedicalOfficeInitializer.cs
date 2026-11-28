@@ -63,6 +63,21 @@ namespace MedicalOffice.Data
                             END
                         ";
                         context.Database.ExecuteSqlRaw(sqlCmd);
+
+                        //NEW CODE STEP 19
+
+                        sqlCmd = @"
+                            Drop View IF EXISTS [AppointmentSummaries];
+                            Create View AppointmentSummaries as
+                            Select p.ID, p.FirstName as First_Name, p.MiddleNAme as Middle_Name, p.LastName as Last_Name,
+                                Count(*) as Number_Of_Appointments,
+                                Sum(a.extraFee) as Total_Extra_Fees,
+                                Max(a.extraFee) as Maximum_Fee_Charged
+                            From Patients p Join Appointments a
+                                on p.ID = a.PatientID
+                            Group By p.ID, p.FirstName, p.MiddleName, p.LastName;
+                        ";
+                        context.Database.ExecuteSqlRaw(sqlCmd);
                     }
                     else //The database is already created
                     {

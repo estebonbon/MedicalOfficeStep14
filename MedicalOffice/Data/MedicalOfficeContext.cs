@@ -1,4 +1,5 @@
 ﻿using MedicalOffice.Models;
+using MedicalOffice.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace MedicalOffice.Data
@@ -65,6 +66,9 @@ namespace MedicalOffice.Data
 
         public DbSet<AppointmentReason> AppointmentReasons { get; set; }
 
+        //Step 19
+        public DbSet<AppointmentSummaryVM> AppointmentSummaries { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             //Prevent Cascade Delete from Doctor to Patient
@@ -128,6 +132,10 @@ namespace MedicalOffice.Data
                 .WithOne(p => p.Doctor)
                 .HasForeignKey(p => p.DoctorID)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<AppointmentSummaryVM>()
+                .ToView(nameof(AppointmentSummaries))
+                .HasKey(a => a.ID);
         }
 
         public override int SaveChanges(bool acceptAllChangesOnSuccess)

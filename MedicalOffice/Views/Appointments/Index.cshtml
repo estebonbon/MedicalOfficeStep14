@@ -94,7 +94,7 @@
                 @Html.DisplayFor(model => item.DurationSummary)
             </td>
             <td>
-                @Html.DisplayFor(model => item.AppointmentReason)
+                @Html.DisplayFor(model => item.AppointmentReason.ReasonName)
             </td>
             <td>
                 @if (!string.IsNullOrEmpty(item.Notes))

@@ -1,7 +1,29 @@
 @model IEnumerable<MedicalOffice.Models.Appointment>
 
 <partial name="_ViewHeading" />
-<h5>Appointments between: @ViewData["StartDate"] and @ViewData["EndDate"]</h5>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <h5>Appointments between: @ViewData["StartDate"] and @ViewData["EndDate"]</h5>
+            <h6>@ViewData["HowMany"]</h6>
+            <h6>(@ViewData["HowManyReasons"])</h6>
+        </div>
+        <div class="col-md-5 ms-md-auto">
+            <form asp-action="InsertFromExcel" asp-controller="Appointments" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label class="control-label custom-file-label">Upload Excel File: (New Appointment Reasons)</label>
+                    <div class="input-group mb-3">
+                        <input type="file" class="form-control" name="theExcel" id="theExcel">
+                        <button type="submit" class="btn btn-primary">Upload Data</button>
+                    </div>
+                </div>
+                <div class="text-danger">@Html.Raw(TempData["FeedBack"])</div>
+            </form>
+        </div>
+    </div>
+</div>
+
 
 <form asp-action="Index" method="get">
     <input type="hidden" name="sortDirection" value="@ViewData["sortDirection"]" />

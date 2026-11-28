@@ -70,6 +70,9 @@ namespace MedicalOffice.Data.MOMigrations
 
                     b.HasKey("ID");
 
+                    b.HasIndex("ReasonName")
+                        .IsUnique();
+
                     b.ToTable("AppointmentReasons");
                 });
 
@@ -373,6 +376,38 @@ namespace MedicalOffice.Data.MOMigrations
                     b.HasDiscriminator<string>("Discriminator").HasValue("UploadedFile");
 
                     b.UseTphMappingStrategy();
+                });
+
+            modelBuilder.Entity("MedicalOffice.ViewModels.AppointmentSummaryVM", b =>
+                {
+                    b.Property<int>("ID")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("First_Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Last_Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<double?>("Maximum_Fee_Charged")
+                        .HasColumnType("REAL");
+
+                    b.Property<string>("Middle_Name")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Number_Of_Appointments")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double?>("Total_Extra_Fees")
+                        .HasColumnType("REAL");
+
+                    b.HasKey("ID");
+
+                    b.ToTable((string)null);
+
+                    b.ToView("AppointmentSummaries", (string)null);
                 });
 
             modelBuilder.Entity("MedicalOffice.Models.DoctorDocument", b =>

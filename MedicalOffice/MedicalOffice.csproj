@@ -4,6 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+	  <NoWarn>$(NoWarn);NU1904</NoWarn>
     <UserSecretsId>aspnet-MedicalOffice-cda34fe1-3bec-45e5-90ec-479bb28a57a4</UserSecretsId>
   </PropertyGroup>
 

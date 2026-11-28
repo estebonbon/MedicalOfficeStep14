@@ -136,6 +136,11 @@ namespace MedicalOffice.Data
             modelBuilder.Entity<AppointmentSummaryVM>()
                 .ToView(nameof(AppointmentSummaries))
                 .HasKey(a => a.ID);
+
+            //Add a unique index to the AppointmentReason ReasonName
+            modelBuilder.Entity<AppointmentReason>()
+            .HasIndex(p => p.ReasonName)
+            .IsUnique();
         }
 
         public override int SaveChanges(bool acceptAllChangesOnSuccess)

@@ -39,6 +39,12 @@ public class AppointmentsController : ElephantController
         ViewData["PatientID"] = PatientSelectList();
         ViewData["AppointmentReasonID"] = AppointmentReasonList(true);
 
+        //Show how many Reasons for Appointments there are in the system
+        ViewData["HowMany"] = "Totale of " + _context.Appointments.Count() + " appointments records.";
+
+        //Show how many Reasons for Appointments there are in the system
+        ViewData["HowManyReasons"] = _context.AppointmentReasons.Count() + " Reasons for Appointments in the System.";
+
         //Always filter by date range
         if (EndDate == DateTime.MinValue)
         {
@@ -450,6 +456,106 @@ public class AppointmentsController : ElephantController
 
         return View(pagedData);
     }
+
+    [HttpPost]
+    public async Task<IActionResult> InsertFromExcel(IFormFile theExcel)
+    {
+        string feedBack = string.Empty;
+        if (theExcel != null)
+        {
+            string mimeType = theExcel.ContentType;
+            long fileLength = theExcel.Length;
+            if (!(mimeType == "" || fileLength == 0))//Looks like we have a file!!!
+            {
+                if (mimeType.Contains("excel") || mimeType.Contains("spreadsheet"))
+                {
+                    ExcelPackage excel;
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        await theExcel.CopyToAsync(memoryStream);
+                        excel = new ExcelPackage(memoryStream);
+                    }
+                    var workSheet = excel.Workbook.Worksheets[0];
+                    var start = workSheet.Dimension.Start;
+                    var end = workSheet.Dimension.End;
+                    int successCount = 0;
+                    int errorCount = 0;
+                    if (workSheet.Cells[1, 1].Text == "Appointment Reason")
+                    {
+                        for (int row = start.Row + 1; row <= end.Row; row++)
+                        {
+                            AppointmentReason appointmentReason = new AppointmentReason();
+                            try
+                            {
+                                // Row by row...
+                                appointmentReason.ReasonName = workSheet.Cells[row, 1].Text;
+                                _context.AppointmentReasons.Add(appointmentReason);
+                                _context.SaveChanges();
+                                successCount++;
+                            }
+                            catch (DbUpdateException dex)
+                            {
+                                errorCount++;
+                                if (dex.GetBaseException().Message.Contains("UNIQUE constraint failed"))
+                                {
+                                    feedBack += "Error: Record " + appointmentReason.ReasonName +
+                                        " was rejected as a duplicate." + "<br />";
+                                }
+                                else
+                                {
+                                    feedBack += "Error: Record " + appointmentReason.ReasonName +
+                                        " caused an error." + "<br />";
+                                }
+                                //Here is the trick to using SaveChanges in a loop.  You must remove the 
+                                //offending object from the cue or it will keep raising the same error.
+                                _context.Remove(appointmentReason);
+                            }
+                            catch (Exception ex)
+                            {
+                                errorCount++;
+                                if (ex.GetBaseException().Message.Contains("correct format"))
+                                {
+                                    feedBack += "Error: Record " + appointmentReason.ReasonName
+                                        + " was rejected becuase it was not in the correct format." + "<br />";
+                                }
+                                else
+                                {
+                                    feedBack += "Error: Record " + appointmentReason.ReasonName
+                                        + " caused and error." + "<br />";
+                                }
+                            }
+                        }
+                        feedBack += "Finished Importing " + (successCount + errorCount).ToString() +
+                            " Records with " + successCount.ToString() + " inserted and " +
+                            errorCount.ToString() + " rejected";
+                    }
+                    else
+                    {
+                        feedBack = "Error: You may have selected the wrong file to upload.<br /> " +
+                            "Remember, you must have the heading 'Appointment Reason' in the " +
+                            "first cell of the first row.";
+                    }
+                }
+                else
+                {
+                    feedBack = "Error: That file is not an Excel spreadsheet.";
+                }
+            }
+            else
+            {
+                feedBack = "Error:  file appears to be empty";
+            }
+        }
+        else
+        {
+            feedBack = "Error: No file uploaded";
+        }
+
+        TempData["Feedback"] = feedBack + "<br />";
+
+        return RedirectToAction(nameof(Index));
+    }
+
 
     private IQueryable<AppointmentSummaryVM> GetAppointmentSummaries()
     {
